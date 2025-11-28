@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <style>
+        /* (Styles omitted for brevity, they should be the same as the previous step) */
+        body {
+            font-family: 'Roboto', 'Arial', sans-serif;
+            background-color: #0f0f0f;
+            color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+            line-height: 1.3; 
+        }
+
+        .yt-main-content {
+            display: flex;
+            padding-left: 240px; 
+            padding-top: 56px; 
+        }
+        
+        .yt-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 240px;
+            height: 100vh;
+            background-color: #0f0f0f;
+            padding-top: 56px; 
+            box-sizing: border-box;
+            border-right: 1px solid #282828;
+        }
+
+        .yt-settings-page {
+            flex-grow: 1;
+            max-width: 1400px; 
+            padding: 24px; 
+        }
+
+        .yt-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px; 
+            line-height: 1.2;
+        }
+        
+        .yt-subheader {
+            font-size: 14px;
+            color: #aaa; 
+            font-weight: 400;
+            margin-bottom: 24px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 400;
+            color: #f1f1f1;
+            transition: background-color 0.1s;
+            text-decoration: none; 
+        }
+        .sidebar-item:hover {
+            background-color: #272727;
+        }
+        .sidebar-item.active {
+            background-color: #272727; 
+            font-weight: 500;
+        }
+        .sidebar-item svg {
+            fill: #f1f1f1;
+            width: 24px;
+            height: 24px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        .sidebar-divider {
+            height: 1px;
+            background-color: #272727;
+            margin: 8px 0;
+        }
+        .settings-card {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        .settings-card h3 {
+            font-size: 16px;
+            font-weight: 500;
+            color: #f1f1f1;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .settings-card p {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+        .settings-card label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #aaa;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .settings-card input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #303030;
+            border: 1px solid #303030;
+            border-radius: 4px;
+            color: #f1f1f1;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+        }
+        .settings-card input[type="text"]:focus {
+            border-color: #3ea6ff;
+            outline: none;
+        }
+        #save-settings-btn {
+            background-color: #3ea6ff;
+            color: #0f0f0f; 
+            border: none;
+            padding: 10px 15px;
+            border-radius: 18px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #save-settings-btn:hover {
+            background-color: #62b1f8;
+        }
+        #save-settings-btn:disabled {
+            background-color: #555;
+            color: #bbb;
+            cursor: not-allowed;
+        }
+        #status-message {
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 500;
+            min-height: 18px;
+        }
+        .status-success { color: #2ECC71; }
+        .status-warning { color: #ffcc00; }
+        .status-error { color: #ff0000; }
+
+    </style>
+</head>
+<body>
+
+    <div class="yt-sidebar">
+        
+        <a href="/settings" class="sidebar-item active" style="margin-top: 10px;">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.39-1.07-.73-1.67-.98l-.33-2.73c-.05-.24-.25-.41-.5-.41h-4c-.25 0-.45.17-.5.41l-.33 2.73c-.6.25-1.15.59-1.67.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.39 1.07.73 1.67.98l.33 2.73c.05.24.25.41.5.41h4c.25 0 .45-.17.5-.41l.33-2.73c.6-.25 1.15-.59 1.67-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1-65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path></svg>
+            Settings
+        </a>
+        
+        <a href="/" class="sidebar-item">
+             <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 3L2 12H5V21H19V12H22L12 3ZM12 5.69L19.31 12H17V19H14V14H10V19H7V12H4.69L12 5.69Z"></path></svg>
+             Your downloads
+        </a>
+        
+        <div class="sidebar-divider"></div>
+        
+        <div id="open-folder-btn" class="sidebar-item" onclick="openDownloadsFolder()">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path d="M10 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4ZM20 18H4V6H9.17L11.17 8H20V18ZM13 14H11V12H9V14H7V16H9V18H11V16H13V18H15V16H17V14H15V12H13V14Z"/></svg>
+            Open Downloads Folder
+        </div>
+
+        <a href="https://www.youtube.com/feed/subscriptions" class="sidebar-item">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path d="M10 18v-6l5 3-5 3zM21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"></path></svg>
+            Subscriptions
+        </a>
+    </div>
+    
+    <div class="yt-main-content">
+        <div class="yt-settings-page">
+            <div class="yt-header">Settings</div>
+            <div class="yt-subheader">Manage your application preferences.</div>
+
+            <div class="settings-card">
+                <h3>Download Location</h3>
+                <p>Change the folder where videos and audio files are saved on your computer. Note: Changes only affect new downloads.</p>
+                
+                <form id="settings-form">
+                    <label for="download-dir">Download Directory Path</label>
+                    <input type="text" id="download-dir" name="DOWNLOAD_DIR" placeholder="/path/to/your/downloads/folder" required>
+                    
+                    <button type="submit" id="save-settings-btn">SAVE</button>
+                    <div id="status-message"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000/api';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            document.getElementById('settings-form').addEventListener('submit', saveSettings);
+        });
+
+        async function openDownloadsFolder() {
+            const button = document.getElementById('open-folder-btn');
+            button.style.cursor = 'wait';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/open_folder`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.status !== 'success') {
+                    alert('Error opening folder: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Open folder network error:', error);
+                alert('Could not connect to server to open folder.');
+            } finally {
+                button.style.cursor = 'pointer';
+            }
+        }
+        
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/settings`);
+                if (!response.ok) throw new Error('Failed to load settings from server.');
+                
+                const config = await response.json();
+                document.getElementById('download-dir').value = config.DOWNLOAD_DIR;
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                document.getElementById('status-message').className = 'status-error';
+                document.getElementById('status-message').textContent = 'Error: Could not connect to server to load settings.';
+            }
+        }
+
+        async function saveSettings(event) {
+            event.preventDefault();
+            const input = document.getElementById('download-dir');
+            const button = document.getElementById('save-settings-btn');
+            const status = document.getElementById('status-message');
+            
+            button.disabled = true;
+            status.textContent = 'Saving...';
+            status.className = '';
+
+            try {
+                const newDir = input.value.trim();
+                const response = await fetch(`${API_BASE_URL}/settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ DOWNLOAD_DIR: newDir })
+                });
+                
+                const result = await response.json();
+                status.textContent = result.message;
+                status.className = `status-${result.status}`;
+                
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                status.textContent = 'Network error: Could not save settings.';
+                status.className = 'status-error';
+            } finally {
+                button.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

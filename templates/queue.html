@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your downloads</title>
+    <style>
+        /* YOUTUBE FONT AND DARK MODE BASE */
+        body {
+            font-family: 'Roboto', 'Arial', sans-serif;
+            background-color: #0f0f0f; /* YouTube Main Dark Background */
+            color: #f1f1f1; /* Primary text color */
+            margin: 0;
+            padding: 0;
+            line-height: 1.3; 
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        /* YOUTUBE LAYOUT EMULATION */
+        .yt-main-content {
+            display: flex;
+            padding-left: 240px; 
+            padding-top: 56px; 
+        }
+        
+        .yt-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 240px;
+            height: 100vh;
+            background-color: #0f0f0f;
+            padding-top: 56px; 
+            box-sizing: border-box;
+            border-right: 1px solid #282828; /* Visual separator */
+            transition: background-color 0.2s, border-right 0.2s;
+        }
+
+        .yt-queue-page {
+            flex-grow: 1;
+            max-width: 1400px; 
+            padding: 24px; 
+        }
+
+        /* HEADER STYLING (MODIFIED) */
+        .yt-header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px; 
+            line-height: 1.2;
+        }
+        
+        .yt-subheader {
+            font-size: 14px;
+            color: #aaa; 
+            font-weight: 400;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+
+        /* NEW: BULK ACTION BUTTONS CONTAINER */
+        .header-actions {
+            display: flex;
+            gap: 10px; /* Space between the two buttons */
+        }
+        
+        /* NEW: BULK ACTION BUTTON STYLES */
+        .bulk-action-btn {
+            background-color: transparent;
+            color: #3ea6ff; 
+            border: 1px solid #3ea6ff;
+            padding: 5px 10px;
+            border-radius: 18px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            white-space: nowrap; /* Prevent text wrap */
+        }
+        .bulk-action-btn:hover {
+            background-color: rgba(62, 166, 255, 0.1);
+        }
+        .bulk-action-btn.delete {
+            color: #ff4d4d;
+            border: 1px solid #ff4d4d;
+        }
+        .bulk-action-btn.delete:hover {
+            background-color: rgba(255, 77, 77, 0.1);
+        }
+        .bulk-action-btn:disabled {
+            border: 1px solid #555;
+            color: #555;
+            cursor: not-allowed;
+            background-color: transparent;
+        }
+
+
+        /* SIDEBAR ITEMS STYLING (No Change) */
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 400;
+            color: #f1f1f1;
+            transition: background-color 0.1s, color 0.1s;
+            text-decoration: none; 
+        }
+        .sidebar-item:hover {
+            background-color: #272727;
+        }
+        .sidebar-item.active {
+            background-color: #272727; 
+            font-weight: 500;
+        }
+        .sidebar-item svg {
+            fill: #f1f1f1;
+            width: 24px;
+            height: 24px;
+            margin-right: 16px;
+            flex-shrink: 0;
+            transition: fill 0.1s;
+        }
+        .sidebar-divider {
+            height: 1px;
+            background-color: #272727;
+            margin: 8px 0;
+            transition: background-color 0.2s;
+        }
+        
+        /* DOWNLOAD LIST VIEW STYLES */
+        .download-item-grid {
+            display: flex;
+            flex-direction: column; 
+            gap: 16px; 
+        }
+
+        .download-item {
+            display: flex;
+            width: 700px; 
+            position: relative;
+            align-items: flex-start;
+            margin-bottom: 4px; 
+            padding: 8px 0;
+            border-radius: 4px;
+            transition: background-color 0.1s;
+        }
+        .download-item:hover {
+            background-color: #1a1a1a;
+        }
+
+        .download-item .thumbnail-container {
+            width: 130px; 
+            height: 73px; 
+            background-color: #303030;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            margin-right: 16px;
+            flex-shrink: 0;
+            transition: background-color 0.2s;
+        }
+
+        .download-item .thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* STATUS AND PROGRESS OVERLAY */
+        .download-item .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px; 
+            background-color: rgba(0, 0, 0, 0.5); 
+            z-index: 10;
+        }
+
+        .download-item .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #2ECC71; 
+            transition: width 0.3s ease-out;
+        }
+        
+        /* DETAILS (Title and Status Text) */
+        .download-item .details {
+            display: flex; 
+            justify-content: space-between;
+            flex-grow: 1; 
+        }
+        
+        .download-item .title-block {
+            max-width: 400px; 
+        }
+
+        .download-item .title {
+            font-size: 14px; 
+            font-weight: 500;
+            color: #f1f1f1; 
+            margin-bottom: 2px;
+            line-height: 1.2; 
+            transition: color 0.2s;
+        }
+
+        .download-item .meta {
+            font-size: 13px; 
+            color: #aaa;
+            margin-bottom: 1px;
+            line-height: 1.3;
+            transition: color 0.2s;
+        }
+        
+        .download-item .status-text {
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.3;
+            transition: color 0.2s;
+        }
+
+        /* Menu Icon (Three dots) */
+        .download-item .menu-icon {
+            width: 24px;
+            height: 24px;
+            padding: 8px;
+            cursor: pointer;
+            fill: #f1f1f1;
+            opacity: 0.8;
+            margin-top: -8px; 
+            margin-right: -8px;
+            transition: fill 0.2s, opacity 0.2s;
+        }
+        .download-item:not(:hover) .menu-icon:not(.active) {
+            opacity: 0; 
+        }
+        
+        /* BANNED/Overlay Emulation (No Change) */
+        .download-item .banned-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 130px; 
+            height: 73px; 
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        /* Status Coloring and Text */
+        .status-running .progress-bar { background-color: #2ECC71; }
+        .status-finished .status-text { color: #888; }
+        .status-error .status-text { color: #ff0000; }
+        .status-stopped .status-text { color: #f88; } 
+
+        .yt-bottom-message {
+            margin-top: 150px; 
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            width: 100%;
+            transition: color 0.2s;
+        }
+
+        .empty-queue {
+            color: #aaa;
+            text-align: center;
+            margin-top: 50px;
+            font-size: 18px;
+            width: 100%;
+            transition: color 0.2s;
+        }
+        
+        /* NEW: CONTEXT MENU STYLES */
+        .context-menu {
+            position: fixed;
+            background-color: #282828;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            min-width: 200px;
+            padding: 8px 0;
+            display: none; 
+        }
+
+        .context-menu-item {
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #f1f1f1;
+            transition: background-color 0.1s;
+            display: flex;
+            align-items: center;
+        }
+
+        .context-menu-item:hover {
+            background-color: #3d3d3d;
+        }
+        .context-menu-item.delete {
+            color: #ff4d4d;
+        }
+        .context-menu-item.delete:hover {
+            background-color: rgba(255, 77, 77, 0.1);
+        }
+        .context-menu-item svg {
+            fill: #f1f1f1;
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+        }
+        .context-menu-item.delete svg {
+            fill: #ff4d4d;
+        }
+        
+        /* ------------------------------------------------------------------ */
+        /* --- LIGHT MODE OVERRIDES ----------------------------------------- */
+        /* ------------------------------------------------------------------ */
+        .light-mode-active {
+            background-color: #f9f9f9; 
+            color: #0f0f0f;
+        }
+        .light-mode-active .yt-sidebar {
+            background-color: #ffffff;
+            border-right: 1px solid #e5e5e5;
+        }
+        .light-mode-active .bulk-action-btn {
+            color: #065fd4;
+            border: 1px solid #065fd4;
+        }
+        .light-mode-active .bulk-action-btn:hover {
+            background-color: rgba(6, 95, 212, 0.1);
+        }
+        .light-mode-active .bulk-action-btn.delete {
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+        .light-mode-active .bulk-action-btn.delete:hover {
+             background-color: rgba(204, 0, 0, 0.1);
+        }
+        .light-mode-active .sidebar-item {
+            color: #0f0f0f;
+        }
+        .light-mode-active .sidebar-item:hover {
+            background-color: #e5e5e5;
+        }
+        .light-mode-active .sidebar-item.active {
+            background-color: #e5e5e5;
+            font-weight: 500;
+        }
+        .light-mode-active .sidebar-item svg {
+            fill: #606060; 
+        }
+        .light-mode-active .sidebar-divider {
+            background-color: #e5e5e5;
+        }
+        .light-mode-active .yt-subheader {
+            color: #606060;
+        }
+        .light-mode-active .download-item:hover {
+            background-color: #f0f0f0;
+        }
+        .light-mode-active .download-item .title {
+            color: #0f0f0f;
+        }
+        .light-mode-active .download-item .meta,
+        .light-mode-active .download-item .status-text {
+            color: #606060;
+        }
+        .light-mode-active .download-item .menu-icon {
+            fill: #606060;
+        }
+        .light-mode-active .download-item .thumbnail-container {
+            background-color: #cccccc;
+        }
+        .light-mode-active .yt-bottom-message {
+            color: #606060;
+        }
+        .light-mode-active .empty-queue {
+            color: #606060;
+        }
+        /* Style for the theme toggle icon in Light Mode */
+        .light-mode-active #theme-toggle-icon {
+            fill: #606060; /* Moon icon color */
+        }
+        /* Light mode for context menu */
+        .light-mode-active .context-menu {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+        }
+        .light-mode-active .context-menu-item {
+            color: #0f0f0f;
+        }
+        .light-mode-active .context-menu-item:hover {
+            background-color: #f0f0f0;
+        }
+        .light-mode-active .context-menu-item svg {
+            fill: #606060;
+        }
+        .light-mode-active .context-menu-item.delete {
+            color: #cc0000;
+        }
+        .light-mode-active .context-menu-item.delete svg {
+            fill: #cc0000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="yt-sidebar">
+        
+        <a href="/settings" class="sidebar-item" style="margin-top: 10px;">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.39-1.07-.73-1.67-.98l-.33-2.73c-.05-.24-.25-.41-.5-.41h-4c-.25 0-.45.17-.5.41l-.33 2.73c-.6.25-1.15.59-1.67.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.39 1.07.73 1.67.98l.33 2.73c.05.24.25.41.5.41h4c.25 0 .45-.17.5-.41l.33-2.73c.6-.25 1.15-.59 1.67-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path></svg>
+            Settings
+        </a>
+        
+        <a href="/" class="sidebar-item active">
+             <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 3L2 12H5V21H19V12H22L12 3ZM12 5.69L19.31 12H17V19H14V14H10V19H7V12H4.69L12 5.69Z"></path></svg>
+             Your downloads
+        </a>
+        
+        <div class="sidebar-divider"></div>
+        
+        <div id="open-folder-btn" class="sidebar-item" onclick="openDownloadsFolder()">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path d="M10 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4ZM20 18H4V6H9.17L11.17 8H20V18ZM13 14H11V12H9V14H7V16H9V18H11V16H13V18H15V16H17V14H15V12H13V14Z"/></svg>
+            Open Downloads Folder
+        </div>
+
+        <div id="theme-toggle-btn" class="sidebar-item" onclick="toggleTheme()">
+            <svg id="theme-toggle-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.25c-5.38 0-9.75 4.37-9.75 9.75s4.37 9.75 9.75 9.75 9.75-4.37 9.75-9.75c0-.49-.03-.97-.08-1.45.19-.04.38-.08.57-.14l.05-.02c.08-.03.15-.07.23-.11l.03-.02c.16-.08.31-.17.47-.27.05-.03.1-.06.14-.09l.02-.02c.15-.1.29-.21.43-.32.06-.05.11-.1.17-.15l.02-.02c.13-.11.26-.23.38-.36.05-.05.1-.1.14-.15l.02-.02c.11-.12.22-.25.33-.38.03-.03.07-.07.1-.1l.02-.02c.09-.12.18-.24.27-.37.03-.04.06-.07.09-.11l.02-.03c.07-.1.14-.2.2-.31.02-.03.04-.06.06-.09l.02-.03c.05-.08.09-.17.13-.25.01-.02.03-.05.04-.07.03-.06.05-.12.08-.18.01-.02.02-.03.03-.05.02-.04.04-.08.05-.12.02-.04.03-.08.04-.12.01-.02.01-.04.02-.06.01-.04.01-.07.02-.11.01-.04.01-.08.01-.12.01-.02.01-.04.01-.06.01-.05.01-.1.01-.15.01-.05 0-.01-.1-.01-.15 0-.01 0-.03 0-.04l-.01-.07c0-.04 0-.07-.01-.11-.01-.04-.01-.07-.02-.11-.01-.03-.01-.06-.02-.09-.01-.04-.02-.07-.03-.1-.01-.03-.02-.06-.03-.1-.01-.03-.02-.06-.04-.09-.01-.03-.02-.06-.04-.09-.01-.03-.03-.06-.04-.09-.01-.03-.02-.06-.04-.09-.02-.03-.04-.06-.06-.09-.02-.03-.04-.06-.06-.09-.02-.03-.04-.06-.07-.09-.02-.03-.04-.06-.07-.09-.03-.03-.05-.06-.08-.09-.03-.03-.05-.06-.08-.09-.03-.03-.06-.06-.09-.08-.03-.03-.06-.05-.09-.08-.03-.03-.06-.05-.09-.07-.03-.02-.06-.04-.09-.06-.03-.02-.06-.04-.09-.05-.03-.02-.06-.03-.09-.05-.03-.02-.06-.03-.09-.04-.03-.01-.06-.02-.09-.03-.03-.01-.06-.02-.09-.02-.04-.01-.08-.01-.12-.01l-.06-.01c-5.38 0-9.75 4.37-9.75 9.75zm1.5 0c0-4.55 3.7-8.25 8.25-8.25.99 0 1.94.18 2.83.51-3.66 1.41-6.24 4.96-6.24 9.04 0 4.08 2.58 7.63 6.24 9.04-3.52 1.25-7.46.24-9.98-2.31-2.52-2.55-3.53-6.49-2.31-9.98z"></path></svg>
+            <span id="theme-text">Dark theme</span>
+        </div>
+
+    </div>
+    
+    <div class="yt-main-content">
+        <div class="yt-queue-page">
+            <div class="yt-header">
+                <span>Your downloads</span>
+                <div class="header-actions">
+                    <button id="clear-queue-keep-btn" class="bulk-action-btn" onclick="clearNonActiveJobs(false)">CLEAR QUEUE (KEEP FILES)</button>
+                    <button id="clear-queue-delete-btn" class="bulk-action-btn delete" onclick="clearNonActiveJobs(true)">CLEAR QUEUE (DELETE FILES)</button>
+                </div>
+            </div>
+            <div class="yt-subheader" id="video-count">... videos</div>
+
+            <div class="download-item-grid" id="download-item-grid">
+                <p class="empty-queue" id="initial-loading">Loading downloads...</p>
+            </div>
+            
+           
+        </div>
+    </div>
+    
+    <div id="context-menu" class="context-menu" style="display: none;">
+        <div id="stop-job-menu-item" class="context-menu-item" onclick="handleJobAction('stop')">
+            <svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 6h12v12H6z"></path></svg>
+            Stop Download
+        </div>
+        <div id="open-file-location-menu-item" class="context-menu-item" onclick="handleJobAction('open_location')">
+             <svg viewBox="0 0 24 24" width="24" height="24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2zM20 18H4V6h7.17l2 2H20v10zm-7-9l-2-2H4V18h16V9h-7z"></path></svg>
+            Open File Location
+        </div>
+        <div id="delete-job-menu-item" class="context-menu-item delete" onclick="handleJobAction('delete_queue_only')">
+            <svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
+            Delete from Queue Only
+        </div>
+        <div id="delete-job-and-file-menu-item" class="context-menu-item delete" onclick="handleJobAction('delete_file_and_queue')">
+             <svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
+            Delete File and from Queue
+        </div>
+    </div>
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000/api';
+        let queuePollingInterval = null;
+        let activeJobId = null; // Stores the job ID for the currently open context menu
+        let jobsCache = []; // NEW: Cache to hold the current queue data
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applySavedTheme(); 
+            startQueuePolling();
+            // Close menu on body click, unless the click was inside the menu
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#context-menu')) {
+                    closeContextMenu();
+                }
+            });
+        });
+
+        // Functionality for context menu on right-click (for advanced users)
+        document.addEventListener('contextmenu', (e) => {
+            const item = e.target.closest('.download-item');
+            if (item) {
+                e.preventDefault();
+                openContextMenu(item, e);
+            }
+        });
+
+        function closeContextMenu() {
+            document.getElementById('context-menu').style.display = 'none';
+            if (activeJobId) {
+                const icon = document.querySelector(`.menu-icon[data-job-id="${activeJobId}"]`);
+                if (icon) icon.classList.remove('active');
+            }
+            activeJobId = null;
+        }
+
+        // FIX: Reworked to correctly handle the click event from the 3-dots icon
+        function openContextMenu(item, e) {
+            e.stopPropagation(); // Stop event propagation to prevent the document click listener from immediately closing it
+            
+            closeContextMenu(); // Close any currently open menu
+            
+            // Ensure we get the parent .download-item element
+            const downloadItem = item.closest('.download-item'); 
+            if (!downloadItem) return;
+
+            const menu = document.getElementById('context-menu');
+            const jobId = downloadItem.dataset.jobId;
+            activeJobId = jobId;
+            
+            const jobData = jobsCache.find(j => j.id === jobId);
+            const isFinished = jobData && (jobData.status === 'finished' || jobData.status === 'error' || jobData.status === 'stopped');
+            
+            // Update menu item visibility based on status
+            document.getElementById('stop-job-menu-item').style.display = isFinished ? 'none' : 'flex';
+            document.getElementById('open-file-location-menu-item').style.display = jobData && jobData.status === 'finished' ? 'flex' : 'none';
+            
+            // Highlight the icon that was clicked
+            const icon = downloadItem.querySelector('.menu-icon');
+            if (icon) {
+                icon.classList.add('active');
+            } 
+
+            // Position the menu relative to the icon
+            const rect = icon.getBoundingClientRect();
+            let x = rect.left;
+            let y = rect.bottom;
+
+            // Reposition if close to the edge
+            if (x + menu.offsetWidth > window.innerWidth) {
+                x = window.innerWidth - menu.offsetWidth - 10;
+            }
+            if (y + menu.offsetHeight > window.innerHeight) {
+                y = window.innerHeight - menu.offsetHeight - 10;
+            }
+
+            menu.style.left = `${x}px`;
+            menu.style.top = `${y}px`;
+            menu.style.display = 'block';
+        }
+
+        function handleJobAction(action) {
+            if (!activeJobId) return closeContextMenu();
+
+            let confirmed = true;
+            if (action === 'delete_queue_only') {
+                confirmed = confirm(`Are you sure you want to remove the job from the queue (file will remain on disk)?`);
+            } else if (action === 'delete_file_and_queue') {
+                confirmed = confirm(`Are you sure you want to delete the downloaded file AND remove the job from the queue? This cannot be undone.`);
+            }
+
+            if (confirmed) {
+                if (action === 'stop') stopQueueJob(activeJobId);
+                else if (action === 'open_location') openFileLocation(activeJobId);
+                else if (action === 'delete_queue_only') deleteJob(activeJobId, false);
+                else if (action === 'delete_file_and_queue') deleteJob(activeJobId, true);
+            }
+            closeContextMenu();
+        }
+
+        function applySavedTheme() {
+            const body = document.body;
+            let newTheme = null;
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlTheme = urlParams.get('theme');
+            const localStorageKey = 'yt-dlp-theme'; 
+
+            if (urlTheme === 'light' || urlTheme === 'dark') {
+                newTheme = urlTheme;
+                localStorage.setItem(localStorageKey, newTheme); 
+            } else {
+                newTheme = localStorage.getItem(localStorageKey) || 'dark';
+            }
+
+            const themeText = document.getElementById('theme-text');
+
+            if (newTheme === 'light') {
+                body.classList.add('light-mode-active');
+                if (themeText) themeText.textContent = 'Dark theme';
+            } else {
+                body.classList.remove('light-mode-active');
+                if (themeText) themeText.textContent = 'Light theme';
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeText = document.getElementById('theme-text');
+            const localStorageKey = 'yt-dlp-theme';
+            
+            if (body.classList.contains('light-mode-active')) {
+                body.classList.remove('light-mode-active');
+                localStorage.setItem(localStorageKey, 'dark');
+                if (themeText) themeText.textContent = 'Light theme';
+            } else {
+                body.classList.add('light-mode-active');
+                localStorage.setItem(localStorageKey, 'light');
+                if (themeText) themeText.textContent = 'Dark theme';
+            }
+        }
+
+
+        function startQueuePolling() {
+            if (queuePollingInterval) clearInterval(queuePollingInterval);
+
+            const pollQueue = async () => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/queue`);
+                    const data = await response.json();
+                    jobsCache = data.jobs; // Store the jobs data
+                    renderDownloadItems(data.jobs);
+                    
+                    // Enable/Disable clear buttons
+                    const keepBtn = document.getElementById('clear-queue-keep-btn');
+                    const deleteBtn = document.getElementById('clear-queue-delete-btn');
+                    const nonActiveJobs = data.jobs.filter(j => j.status !== 'running' && j.status !== 'pending');
+                    const disableButtons = nonActiveJobs.length === 0;
+
+                    if(keepBtn) keepBtn.disabled = disableButtons;
+                    if(deleteBtn) deleteBtn.disabled = disableButtons;
+
+                } catch (error) {
+                    console.error('Queue polling failed:', error);
+                    document.getElementById('download-item-grid').innerHTML = '<p class="empty-queue" style="color:red;">Error connecting to server. Is app.py running?</p>';
+                }
+            };
+
+            pollQueue(); 
+            queuePollingInterval = setInterval(pollQueue, 2000); 
+        }
+
+        async function openDownloadsFolder() {
+            const button = document.getElementById('open-folder-btn');
+            button.style.cursor = 'wait';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/open_folder`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.status !== 'success') {
+                    alert('Error opening folder: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Open folder network error:', error);
+                alert('Could not connect to server to open folder.');
+            } finally {
+                button.style.cursor = 'pointer';
+            }
+        }
+
+        // Open File Location
+        async function openFileLocation(jobId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/open_file_location/${jobId}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.status !== 'success') {
+                   // alert('Error opening file location: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Open file location network error:', error);
+                alert('Could not connect to server to open file location.');
+            }
+        }
+        
+        // Delete Individual Job
+        async function deleteJob(jobId, deleteFile) {
+             const endpoint = deleteFile ? 'delete_job_and_file' : 'delete_job';
+             
+             try {
+                const response = await fetch(`${API_BASE_URL}/${endpoint}/${jobId}`, { method: 'DELETE' });
+                const result = await response.json();
+                console.log(`Delete command for ${jobId}:`, result.message);
+                setTimeout(startQueuePolling, 500); 
+             } catch (error) {
+                console.error('Delete command network error:', error);
+                alert('Could not connect to server to delete job.');
+             }
+        }
+        
+        // MODIFIED: Clear Non-Active Jobs to take a boolean argument (no more nested confirms)
+        async function clearNonActiveJobs(deleteFiles) {
+            const actionText = deleteFiles ? "delete all associated files and remove" : "remove";
+            const confirmed = confirm(`Are you sure you want to ${actionText} all finished, error, and stopped downloads?`);
+            if (!confirmed) return;
+            
+            const keepBtn = document.getElementById('clear-queue-keep-btn');
+            const deleteBtn = document.getElementById('clear-queue-delete-btn');
+            
+            if(keepBtn) keepBtn.disabled = true;
+            if(deleteBtn) deleteBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/clear_queue`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ delete_files: deleteFiles })
+                });
+                const result = await response.json();
+                console.log('Clear queue result:', result.message);
+                alert(result.message);
+                setTimeout(startQueuePolling, 500);
+            } catch (error) {
+                console.error('Clear queue network error:', error);
+                alert('Could not connect to server to clear queue.');
+            }
+        }
+
+
+        function renderDownloadItems(jobs) {
+            const grid = document.getElementById('download-item-grid');
+            const videoCountElement = document.getElementById('video-count');
+            grid.innerHTML = ''; 
+
+            const activeJobs = jobs.filter(j => j.status !== 'finished' && j.status !== 'error' && j.status !== 'stopped');
+            const finishedJobs = jobs.filter(j => j.status === 'finished' || j.status === 'error' || j.status === 'stopped');
+            const sortedJobs = [...activeJobs, ...finishedJobs];
+
+            videoCountElement.textContent = `${sortedJobs.length} videos`;
+
+
+            if (sortedJobs.length === 0) {
+                grid.innerHTML = '<p class="empty-queue">No active or completed downloads yet. Start one from YouTube!</p>';
+                return;
+            }
+
+            sortedJobs.forEach(job => {
+                const item = document.createElement('div');
+                item.className = `download-item status-${job.status}`; 
+                item.dataset.jobId = job.id;
+
+                const videoIdMatch = job.url.match(/(?<=v=)[\w-]+/);
+                
+                let videoId = null;
+                if (videoIdMatch) {
+                    videoId = videoIdMatch[0];
+                }
+                
+                const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+
+                let progressWidth = 0;
+                let statusText = '';
+                
+                const uploader = job.uploader || 'Channel Name';
+                const isFinalState = job.status === 'finished' || job.status === 'error' || job.status === 'stopped';
+                const filesize = (job.filesize && isFinalState) ? `(${job.filesize})` : ''; 
+                const fileMissingWarning = (job.status === 'finished' && job.file_missing) ? ' (FILE MISSING)' : '';
+                
+                const metaInfo = `${uploader}`; 
+
+                if (job.status === 'running') {
+                    const progress = job.progress.includes('%') ? job.progress : 'Downloading...';
+                    const match = progress.match(/(\d+\.\d+)%/);
+                    
+                    if (match) {
+                        progressWidth = parseFloat(match[1]);
+                        statusText = `Downloading... ${progressWidth}%`;
+                    } else {
+                        progressWidth = 5; 
+                        statusText = progress;
+                    }
+                } else if (job.status === 'finished') {
+                    progressWidth = 100;
+                    statusText = `Downloaded ${filesize}${fileMissingWarning}`;
+                } else if (job.status === 'pending') {
+                    progressWidth = 0; 
+                    statusText = 'Queued...';
+                } else if (job.status === 'error') {
+                     progressWidth = 100;
+                     statusText = `Download Error: ${job.progress}`;
+                } else if (job.status === 'stopped') {
+                     progressWidth = 100;
+                     statusText = 'Stopped by user.';
+                }
+
+
+                item.innerHTML = `
+                    <div class="thumbnail-container">
+                        ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="${job.title} thumbnail" class="thumbnail">` : `Video Thumbnail`}
+                        <div class="banned-overlay" style="display: ${job.title && job.title.includes('BANNED') ? 'flex' : 'none'};">BANNED</div>
+                        <div class="overlay" style="display: ${job.status === 'finished' || job.status === 'error' || job.status === 'stopped' ? 'none' : 'block'};">
+                            <div class="progress-bar" style="width: ${progressWidth}%;"></div>
+                        </div>
+                    </div>
+                    <div class="details">
+                        <div class="title-block">
+                            <div class="title" title="${job.title}">${job.title}</div>
+                            <div class="meta">Format: ${job.format}</div>
+                            <div class="status-text">${statusText}</div>
+                        </div>
+                        <svg class="menu-icon" data-job-id="${job.id}" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" onclick="openContextMenu(this, event)">
+                            <g><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></g>
+                        </svg>
+                    </div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        async function stopQueueJob(jobId) {
+            if (!jobId) return;
+
+            const icon = document.querySelector(`.menu-icon[data-job-id="${jobId}"]`);
+            if (icon) {
+                icon.style.opacity = 0.3; 
+                icon.style.cursor = 'wait';
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/stop/${jobId}`, { method: 'POST' });
+                const result = await response.json();
+                console.log(`Stop command for ${jobId}:`, result.message);
+
+                setTimeout(startQueuePolling, 500); 
+
+            } catch (error) {
+                console.error('Stop command network error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
